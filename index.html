@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Pengawasan Harian Proyek</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e5e7eb;
+        }
+        /* Custom scrollbar for better appearance */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555; 
+        }
+        
+        /* A4 Document Setup */
+        .a4-container {
+            width: 100%;
+            max-width: 210mm;
+            min-height: 297mm;
+            background-color: white;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+        }
+        
+        @page {
+            size: A4 portrait;
+            margin: 15mm;
+        }
+        
+        @media print {
+            body { 
+                background-color: white !important; 
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .a4-container { 
+                box-shadow: none !important; 
+                max-width: none !important;
+                min-height: auto !important;
+                margin: 0 !important;
+            }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            /* Ensure backgrounds print */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
+            /* Remove input styling for print */
+            input, select, textarea {
+                border: none !important;
+                background: transparent !important;
+                resize: none !important;
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                padding: 0 !important;
+                color: black !important;
+            }
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased p-4 md:p-8 flex flex-col items-center print:p-0">
+
+    <!-- Action Buttons (No Print) -->
+    <div class="no-print w-full max-w-[210mm] mb-4 flex justify-end space-x-4">
+        <button type="button" onclick="resetForm()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded shadow-sm hover:bg-gray-50 font-medium transition">
+            <i class="fas fa-undo mr-2"></i> Reset
+        </button>
+        <button type="button" onclick="prepareForPrint()" class="px-4 py-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 font-medium transition">
+            <i class="fas fa-print mr-2"></i> Cetak PDF (A4)
+        </button>
+    </div>
+
+    <div class="a4-container p-8 print:p-0">
+        <form id="pengawasanForm">
+            
+            <!-- Formal Document Border -->
+            <div class="border-2 border-black text-black">
+                
+                <!-- Header Section -->
+                <div class="text-center border-b-2 border-black p-4 bg-gray-50 print:bg-white">
+                    <h1 class="text-2xl font-bold uppercase tracking-wide">Laporan Pengawasan Harian</h1>
+                    <h2 class="text-lg font-semibold mt-1 uppercase">Proyek Pelaksanaan Urugan dan Pagar Keliling PT. Corak Warna</h2>
+                </div>
+
+                <!-- Section 1: Informasi Dasar -->
+                <div class="grid grid-cols-1 md:grid-cols-2 border-b-2 border-black">
+                    <!-- Kolom Kiri -->
+                    <div class="border-b md:border-b-0 md:border-r-2 border-black p-4">
+                        <div class="flex items-center mb-3">
+                            <label for="tanggal" class="w-24 font-semibold text-sm">Tanggal</label>
+                            <span class="mr-2">:</span>
+                            <input type="date" id="tanggal" name="tanggal" required
+                                class="flex-1 border-b border-gray-400 focus:outline-none focus:border-black bg-transparent">
+                        </div>
+                        <div class="flex items-center mb-3">
+                            <label for="jamPengawasan" class="w-24 font-semibold text-sm">Jam</label>
+                            <span class="mr-2">:</span>
+                            <input type="time" id="jamPengawasan" name="jamPengawasan" required
+                                class="flex-1 border-b border-gray-400 focus:outline-none focus:border-black bg-transparent">
+                        </div>
+                        <div class="flex items-center">
+                            <label for="cuaca" class="w-24 font-semibold text-sm">Cuaca</label>
+                            <span class="mr-2">:</span>
+                            <select id="cuaca" name="cuaca" class="flex-1 border-b border-gray-400 focus:outline-none focus:border-black bg-transparent pb-1">
+                                <option value="">Pilih Cuaca...</option>
+                                <option value="Cerah">Cerah</option>
+                                <option value="Berawan">Berawan</option>
+                                <option value="Hujan Ringan">Hujan Ringan</option>
+                                <option value="Hujan Lebat">Hujan Lebat</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Kolom Kanan -->
+                    <div class="p-4 flex flex-col justify-center">
+                        <div class="flex">
+                            <label class="w-24 font-semibold text-sm">Lokasi</label>
+                            <span class="mr-2">:</span>
+                            <span class="flex-1 text-sm font-medium">Jl. Soekarno Hatta No. 676 Kel. Cipamokolan Kec. Rancasari Kota Bandung</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Progress & Aktivitas -->
+                <div class="p-4 border-b-2 border-black">
+                    <h3 class="font-bold mb-3 flex items-center">
+                        I. Uraian Pekerjaan / Progres Hari Ini <span class="text-red-500 ml-1 no-print">*</span>
+                    </h3>
+                    <textarea id="uraianPekerjaan" name="uraianPekerjaan" rows="6" placeholder="Jelaskan secara rinci pekerjaan yang dilakukan hari ini..." required
+                        class="w-full border border-gray-300 p-2 rounded-sm focus:outline-none focus:border-black print:border-none print:p-0"></textarea>
+                </div>
+
+                <!-- Section 3: Kendala -->
+                <div class="p-4 border-b-2 border-black">
+                    <h3 class="font-bold mb-3 flex items-center">
+                        II. Temuan / Kendala / Tindak Lanjut
+                    </h3>
+                    <textarea id="kendala" name="kendala" rows="4" placeholder="Catat kendala di lapangan dan rencana tindak lanjut..."
+                        class="w-full border border-gray-300 p-2 rounded-sm focus:outline-none focus:border-black print:border-none print:p-0"></textarea>
+                </div>
+
+                <!-- Section 4: Dokumentasi (Web Only) -->
+                <div class="p-4 border-b-2 border-black no-print">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold flex items-center">
+                            III. Lampiran Dokumentasi (Unggah Foto)
+                        </h3>
+                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Opsional, bisa tambah lebih dari 1</span>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 border border-dashed border-gray-400 rounded-sm">
+                        <!-- Area Upload -->
+                        <div class="flex items-center justify-center w-full mb-4">
+                            <label for="fotoInput" class="flex flex-col items-center justify-center w-full h-20 border-2 border-gray-300 border-dashed rounded cursor-pointer bg-white hover:bg-gray-100 transition">
+                                <div class="flex flex-col items-center justify-center pt-2 pb-2">
+                                    <p class="text-sm text-gray-600"><i class="fas fa-plus-circle text-blue-500 mr-2 text-lg"></i><span class="font-semibold">Klik untuk tambah foto</span></p>
+                                </div>
+                                <input id="fotoInput" type="file" class="hidden" accept="image/*" multiple onchange="handlePhotoUpload(event)" />
+                            </label>
+                        </div>
+                        
+                        <!-- Area Preview Foto (Web) -->
+                        <div id="photoPreviewContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 empty:hidden"></div>
+                    </div>
+                </div>
+                
+                <!-- Section 4: Dokumentasi (Print Only) -->
+                <div class="hidden print-only p-4 border-b-2 border-black">
+                    <h3 class="font-bold mb-3 flex items-center">
+                        III. Lampiran Dokumentasi
+                    </h3>
+                    <div id="printPhotoContainer" class="grid grid-cols-2 gap-4">
+                        <!-- Photos for print akan dimasukkan kesini oleh JS -->
+                    </div>
+                </div>
+
+                <!-- Section 5: Tanda Tangan -->
+                <div class="p-6 bg-white print:break-inside-avoid">
+                    <div class="flex justify-between px-4 sm:px-12">
+                        
+                        <!-- Pengawas -->
+                        <div class="flex flex-col items-center justify-between text-center w-48" style="min-height: 160px;">
+                            <div>
+                                <p class="text-sm font-medium">Dibuat oleh,</p>
+                                <p class="text-sm font-semibold">Pengawas Lapangan</p>
+                            </div>
+                            
+                            <!-- Ruang kosong untuk TTD Manual -->
+                            <div class="h-24 flex items-center justify-center my-2 w-full"></div>
+                            
+                            <div>
+                                <p class="font-bold text-base underline text-black">Chandra Kurniawan, ST.</p>
+                                <p class="text-sm text-black">Pengawas</p>
+                            </div>
+                        </div>
+
+                        <!-- Direktur -->
+                        <div class="flex flex-col items-center justify-between text-center w-48" style="min-height: 160px;">
+                            <div>
+                                <p class="text-sm font-medium">Mengetahui/Menyetujui,</p>
+                                <p class="text-sm font-semibold">Direktur</p>
+                            </div>
+                            
+                            <!-- Ruang kosong untuk TTD Manual (Tinggi sama agar sejajar) -->
+                            <div class="h-24 flex items-center justify-center my-2 w-full"></div>
+                            
+                            <div>
+                                <p class="font-bold text-base underline text-black">Rohendi</p>
+                                <p class="text-sm text-black">Direktur</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Custom Modal -->
+    <div id="customModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-2xl transform transition-all">
+            <div class="text-center">
+                <div id="modalIcon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4">
+                    <!-- Icon -->
+                </div>
+                <h3 id="modalTitle" class="text-lg leading-6 font-medium text-gray-900 mb-2">Pesan</h3>
+                <div class="mt-2">
+                    <p id="modalMessage" class="text-sm text-gray-500"></p>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-6">
+                <button type="button" onclick="closeModal()" class="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set default date & time
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            document.getElementById('tanggal').value = dateStr;
+            const startHour = String(now.getHours()).padStart(2, '0');
+            document.getElementById('jamPengawasan').value = `${startHour}:00`;
+        });
+
+        // Modal Logic
+        function showModal(title, message, type = 'info') {
+            const modal = document.getElementById('customModal');
+            const modalIcon = document.getElementById('modalIcon');
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            
+            if (type === 'error') {
+                modalIcon.innerHTML = '<i class="fas fa-exclamation-circle text-2xl text-red-600"></i>';
+                modalIcon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4";
+            } else if (type === 'warning') {
+                modalIcon.innerHTML = '<i class="fas fa-exclamation-triangle text-2xl text-yellow-600"></i>';
+                modalIcon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4";
+            } else {
+                modalIcon.innerHTML = '<i class="fas fa-info-circle text-2xl text-blue-600"></i>';
+                modalIcon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4";
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('customModal').classList.add('hidden');
+        }
+
+        // Photo Upload Logic
+        let uploadedPhotos = [];
+
+        function handlePhotoUpload(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            Array.from(files).forEach(file => {
+                if (file.size > 5 * 1024 * 1024) {
+                    showModal('File Terlalu Besar', `File ${file.name} melebihi 5MB.`, 'error');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedPhotos.push({
+                        id: 'photo_' + Date.now() + Math.random().toString(36).substr(2, 9),
+                        data: e.target.result,
+                        name: file.name,
+                        caption: ''
+                    });
+                    renderPhotos();
+                }
+                reader.readAsDataURL(file);
+            });
+            event.target.value = '';
+        }
+
+        function renderPhotos() {
+            const container = document.getElementById('photoPreviewContainer');
+            container.innerHTML = '';
+            
+            uploadedPhotos.forEach(photo => {
+                const div = document.createElement('div');
+                // Tampilan rapih web dengan input caption langsung di bawah foto
+                div.className = 'relative bg-white border border-gray-300 rounded p-2 shadow-sm flex flex-col';
+                div.innerHTML = `
+                    <button type="button" onclick="removePhoto('${photo.id}')" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition z-10" title="Hapus Foto">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                    <div class="h-32 w-full bg-gray-100 rounded mb-2 overflow-hidden flex items-center justify-center border border-gray-200">
+                        <img src="${photo.data}" alt="Preview" class="object-cover w-full h-full">
+                    </div>
+                    <input type="text" placeholder="Keterangan foto ini..." value="${photo.caption}" 
+                        class="w-full text-sm p-2 border border-gray-300 rounded focus:border-black focus:outline-none" 
+                        oninput="updatePhotoCaption('${photo.id}', this.value)">
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Update data array tanpa me-render ulang agar kursor tidak hilang saat mengetik
+        function updatePhotoCaption(id, caption) {
+            const photo = uploadedPhotos.find(p => p.id === id);
+            if (photo) {
+                photo.caption = caption;
+            }
+        }
+
+        function removePhoto(id) {
+            uploadedPhotos = uploadedPhotos.filter(p => p.id !== id);
+            renderPhotos();
+        }
+
+        // Print/Export Logic
+        function prepareForPrint() {
+            // Validasi kolom wajib
+            const requiredFields = ['tanggal', 'jamPengawasan', 'uraianPekerjaan'];
+            let isValid = true;
+            for (const fieldId of requiredFields) {
+                const el = document.getElementById(fieldId);
+                if (!el.value.trim()) {
+                    el.classList.add('bg-red-50');
+                    isValid = false;
+                } else {
+                    el.classList.remove('bg-red-50');
+                }
+            }
+
+            if (!isValid) {
+                showModal('Peringatan', 'Harap isi semua kolom wajib (yang bertanda bintang merah) sebelum mencetak.', 'warning');
+                return;
+            }
+
+            // Siapkan Foto untuk tampilan Print
+            const printContainer = document.getElementById('printPhotoContainer');
+            printContainer.innerHTML = ''; 
+
+            if (uploadedPhotos.length > 0) {
+                uploadedPhotos.forEach(photo => {
+                    const div = document.createElement('div');
+                    // Format rapih PDF (Grid, Border hitam tegas)
+                    div.className = 'border border-black p-2 flex flex-col break-inside-avoid page-break-inside-avoid';
+                    div.innerHTML = `
+                        <div class="flex-1 w-full bg-gray-50 flex justify-center items-center overflow-hidden border-b border-black pb-2 mb-2" style="min-height: 150px;">
+                            <img src="${photo.data}" class="max-w-full max-h-48 object-contain">
+                        </div>
+                        <div class="px-1 pb-1">
+                            <span class="font-bold text-xs uppercase text-gray-700">Keterangan:</span>
+                            <p class="text-sm text-black mt-1 leading-tight">${photo.caption || '-'}</p>
+                        </div>
+                    `;
+                    printContainer.appendChild(div);
+                });
+            } else {
+                printContainer.innerHTML = '<p class="text-gray-500 italic text-sm col-span-2">Tidak ada dokumentasi foto yang dilampirkan.</p>';
+            }
+
+            // Print
+            setTimeout(() => {
+                window.print();
+            }, 300);
+        }
+
+        function resetForm() {
+            if(confirm("Apakah Anda yakin ingin mengosongkan formulir? Data akan terhapus.")) {
+                 document.getElementById('pengawasanForm').reset();
+                 uploadedPhotos = [];
+                 renderPhotos();
+                 
+                 const now = new Date();
+                 document.getElementById('tanggal').value = now.toISOString().split('T')[0];
+                 const startHour = String(now.getHours()).padStart(2, '0');
+                 document.getElementById('jamPengawasan').value = `${startHour}:00`;
+            }
+        }
+    </script>
+</body>
+</html>
