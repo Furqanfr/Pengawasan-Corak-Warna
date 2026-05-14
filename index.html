@@ -12,22 +12,11 @@
             font-family: 'Inter', sans-serif;
             background-color: #e5e7eb;
         }
-        /* Custom scrollbar for better appearance */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555; 
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
         
-        /* A4 Document Setup */
         .a4-container {
             width: 100%;
             max-width: 210mm;
@@ -35,11 +24,30 @@
             background-color: white;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
             margin: 0 auto;
+            padding: 15mm; /* Margin dalam kertas */
+        }
+
+        /* Styling Input di dalam tabel agar menyatu dengan sel */
+        .table-input {
+            width: 100%;
+            min-height: 24px;
+            background-color: transparent;
+            border: none !important;
+            outline: none !important;
+            resize: none;
+            overflow: hidden; /* Sembunyikan scrollbar, auto-resize dengan JS */
+            padding: 6px;
+        }
+        
+        /* Mencegah baris tabel terpotong di tengah saat pindah halaman */
+        tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
         
         @page {
             size: A4 portrait;
-            margin: 15mm;
+            margin: 0; /* Margin diatur di .a4-container via padding */
         }
         
         @media print {
@@ -55,19 +63,20 @@
                 margin: 0 !important;
             }
             .no-print { display: none !important; }
-            .print-only { display: block !important; }
-            /* Ensure backgrounds print */
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             
-            /* Remove input styling for print */
-            input, select, textarea {
-                border: none !important;
-                background: transparent !important;
-                resize: none !important;
+            /* Tampilan select dan date saat print agar terlihat seperti teks biasa */
+            select, input[type="date"], input[type="time"] {
                 appearance: none !important;
                 -webkit-appearance: none !important;
-                padding: 0 !important;
+                background: transparent !important;
+                border: none !important;
                 color: black !important;
+                padding: 0 !important;
+            }
+            /* Hilangkan dropdown icon pada select saat di-print */
+            select {
+                background-image: none !important;
             }
         }
     </style>
@@ -84,166 +93,195 @@
         </button>
     </div>
 
-    <div class="a4-container p-8 print:p-0">
+    <div class="a4-container print:p-8">
         <form id="pengawasanForm">
             
-            <!-- Formal Document Border -->
-            <div class="border-2 border-black text-black">
+            <!-- HEADER (Di luar tabel) -->
+            <div class="text-center mb-6 border-b-2 border-black pb-4">
+                <h1 class="text-2xl font-bold uppercase tracking-wide">Laporan Pengawasan Harian</h1>
+                <h2 class="text-lg font-bold mt-2 uppercase">Proyek Pelaksanaan Urugan dan Pagar Keliling PT. Corak Warna</h2>
+                <p class="text-sm font-medium mt-1 text-gray-800">Lokasi: Jl. Soekarno Hatta No. 676 Kel. Cipamokolan Kec. Rancasari Kota Bandung</p>
+            </div>
+
+            <!-- INFORMASI DASAR -->
+            <div class="flex flex-wrap justify-between items-start mb-6 text-sm">
+                <div class="flex flex-col space-y-2 w-full md:w-1/2">
+                    <div class="flex items-center">
+                        <span class="font-bold w-20">Tanggal</span>
+                        <span class="mr-2">:</span> 
+                        <input type="date" id="tanggal" name="tanggal" required class="border-b border-gray-400 outline-none bg-transparent focus:border-black print:border-none">
+                    </div>
+                    <div class="flex items-center">
+                        <span class="font-bold w-20">Jam</span>
+                        <span class="mr-2">:</span> 
+                        <input type="time" id="jamPengawasan" name="jamPengawasan" required class="border-b border-gray-400 outline-none bg-transparent focus:border-black print:border-none">
+                    </div>
+                </div>
+                <div class="flex flex-col w-full md:w-1/3 mt-2 md:mt-0">
+                    <div class="flex items-center">
+                        <span class="font-bold w-20">Cuaca</span>
+                        <span class="mr-2">:</span> 
+                        <select id="cuaca" name="cuaca" class="border-b border-gray-400 outline-none bg-transparent focus:border-black flex-1 print:border-none cursor-pointer">
+                            <option value="">Pilih Cuaca...</option>
+                            <option value="Cerah">Cerah</option>
+                            <option value="Berawan">Berawan</option>
+                            <option value="Hujan Ringan">Hujan Ringan</option>
+                            <option value="Hujan Lebat">Hujan Lebat</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABEL 1: Uraian Pekerjaan & Progres -->
+            <div class="mb-6">
+                <h3 class="font-bold mb-2 text-sm uppercase">I. Uraian Pekerjaan / Progres Hari Ini <span class="text-red-500 no-print">*</span></h3>
+                <!-- pr-8 untuk memberi ruang agar tombol Hapus mengambang di luar tabel tanpa membuat scroll horizontal -->
+                <div class="pr-8 print:pr-0">
+                    <table class="w-full border-collapse border-2 border-black text-sm" id="uraianTable">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-black p-2 w-10 text-center">No</th>
+                                <th class="border border-black p-2">Deskripsi Pekerjaan / Aktivitas</th>
+                                <th class="border border-black p-2 w-32 text-center">Status</th>
+                                <th class="border border-black p-2 w-24 text-center">Kendala? <br><span class="text-[10px] font-normal">(Centang)</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="uraianTbody">
+                            <!-- Baris Pertama -->
+                            <tr>
+                                <td class="border border-black p-2 text-center align-top row-number">1</td>
+                                <td class="border border-black p-0 align-top">
+                                    <textarea class="table-input auto-resize" rows="2" placeholder="Tuliskan detail pekerjaan..." required></textarea>
+                                </td>
+                                <td class="border border-black p-2 text-center align-top">
+                                    <select class="w-full bg-transparent outline-none cursor-pointer print:appearance-none text-center h-full pt-1">
+                                        <option value="">- Pilih -</option>
+                                        <option value="Progres">Progres</option>
+                                        <option value="Selesai">Selesai</option>
+                                    </select>
+                                </td>
+                                <!-- Posisi relatif untuk menempatkan tombol hapus di luar sel -->
+                                <td class="border border-black p-2 text-center align-middle relative">
+                                    <input type="checkbox" class="w-5 h-5 cursor-pointer accent-black">
+                                    
+                                    <!-- Tombol Aksi Mengambang (Di luar garis tabel) -->
+                                    <button type="button" onclick="removeRow(this, 'uraianTbody')" class="no-print absolute top-1/2 -right-8 transform -translate-y-1/2 text-red-500 hover:bg-red-100 rounded-full w-6 h-6 flex items-center justify-center transition disabled:opacity-30" disabled title="Hapus baris">
+                                        <i class="fas fa-times text-sm"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button type="button" onclick="addUraianRow()" class="no-print mt-2 text-sm text-blue-600 hover:text-blue-800 font-bold flex items-center">
+                    <i class="fas fa-plus mr-1"></i> Tambah Baris Pekerjaan
+                </button>
+            </div>
+
+            <!-- TABEL 2: Temuan & Tindak Lanjut -->
+            <div class="mb-6">
+                <h3 class="font-bold mb-2 text-sm uppercase">II. Daftar Temuan & Solusi</h3>
+                <div class="pr-8 print:pr-0">
+                    <table class="w-full border-collapse border-2 border-black text-sm" id="temuanTable">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-black p-2 w-10 text-center">No</th>
+                                <th class="border border-black p-2 w-1/2">Temuan / Kendala di Lapangan</th>
+                                <th class="border border-black p-2 w-1/2">Solusi / Rencana Tindak Lanjut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="temuanTbody">
+                            <!-- Baris Pertama -->
+                            <tr>
+                                <td class="border border-black p-2 text-center align-top row-number">1</td>
+                                <td class="border border-black p-0 align-top">
+                                    <textarea class="table-input auto-resize" rows="2" placeholder="Sebutkan kendala (jika ada)..."></textarea>
+                                </td>
+                                <!-- Posisi relatif untuk tombol hapus -->
+                                <td class="border border-black p-0 align-top relative">
+                                    <textarea class="table-input auto-resize" rows="2" placeholder="Sebutkan solusi penanganan..."></textarea>
+                                    
+                                    <button type="button" onclick="removeRow(this, 'temuanTbody')" class="no-print absolute top-1/2 -right-8 transform -translate-y-1/2 text-red-500 hover:bg-red-100 rounded-full w-6 h-6 flex items-center justify-center transition disabled:opacity-30" disabled title="Hapus baris">
+                                        <i class="fas fa-times text-sm"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button type="button" onclick="addTemuanRow()" class="no-print mt-2 text-sm text-blue-600 hover:text-blue-800 font-bold flex items-center">
+                    <i class="fas fa-plus mr-1"></i> Tambah Baris Temuan
+                </button>
+            </div>
+
+            <!-- SECTION 3: Dokumentasi (Menyatu antara Web dan Print) -->
+            <div class="mb-6 page-break-inside-avoid" style="page-break-inside: avoid;">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-sm uppercase">III. Lampiran Dokumentasi Foto</h3>
+                </div>
                 
-                <!-- Header Section -->
-                <div class="text-center border-b-2 border-black p-4 bg-gray-50 print:bg-white">
-                    <h1 class="text-2xl font-bold uppercase tracking-wide">Laporan Pengawasan Harian</h1>
-                    <h2 class="text-lg font-semibold mt-1 uppercase">Proyek Pelaksanaan Urugan dan Pagar Keliling PT. Corak Warna</h2>
+                <!-- Area Upload (No Print) -->
+                <div class="no-print bg-gray-50 p-4 border border-dashed border-gray-400 mb-4 rounded flex justify-center items-center">
+                    <label for="fotoInput" class="cursor-pointer text-center group w-full py-2">
+                        <i class="fas fa-camera text-2xl text-blue-500 group-hover:text-blue-600 mb-2 block"></i>
+                        <span class="text-sm font-semibold text-gray-700 group-hover:text-gray-900">Klik untuk tambah foto</span>
+                        <input id="fotoInput" type="file" class="hidden" accept="image/*" multiple onchange="handlePhotoUpload(event)" />
+                    </label>
                 </div>
-
-                <!-- Section 1: Informasi Dasar -->
-                <div class="grid grid-cols-1 md:grid-cols-2 border-b-2 border-black">
-                    <!-- Kolom Kiri -->
-                    <div class="border-b md:border-b-0 md:border-r-2 border-black p-4">
-                        <div class="flex items-center mb-3">
-                            <label for="tanggal" class="w-24 font-semibold text-sm">Tanggal</label>
-                            <span class="mr-2">:</span>
-                            <input type="date" id="tanggal" name="tanggal" required
-                                class="flex-1 border-b border-gray-400 focus:outline-none focus:border-black bg-transparent">
-                        </div>
-                        <div class="flex items-center mb-3">
-                            <label for="jamPengawasan" class="w-24 font-semibold text-sm">Jam</label>
-                            <span class="mr-2">:</span>
-                            <input type="time" id="jamPengawasan" name="jamPengawasan" required
-                                class="flex-1 border-b border-gray-400 focus:outline-none focus:border-black bg-transparent">
-                        </div>
-                        <div class="flex items-center">
-                            <label for="cuaca" class="w-24 font-semibold text-sm">Cuaca</label>
-                            <span class="mr-2">:</span>
-                            <select id="cuaca" name="cuaca" class="flex-1 border-b border-gray-400 focus:outline-none focus:border-black bg-transparent pb-1">
-                                <option value="">Pilih Cuaca...</option>
-                                <option value="Cerah">Cerah</option>
-                                <option value="Berawan">Berawan</option>
-                                <option value="Hujan Ringan">Hujan Ringan</option>
-                                <option value="Hujan Lebat">Hujan Lebat</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Kolom Kanan -->
-                    <div class="p-4 flex flex-col justify-center">
-                        <div class="flex">
-                            <label class="w-24 font-semibold text-sm">Lokasi</label>
-                            <span class="mr-2">:</span>
-                            <span class="flex-1 text-sm font-medium">Jl. Soekarno Hatta No. 676 Kel. Cipamokolan Kec. Rancasari Kota Bandung</span>
-                        </div>
-                    </div>
+                
+                <!-- Container Foto -->
+                <div id="photoContainer" class="grid grid-cols-2 gap-4 empty:hidden">
+                    <!-- Foto akan dirender di sini via JS -->
                 </div>
+                <!-- Pesan kosong (Hanya tampil di print jika kosong) -->
+                <p id="emptyPhotoMsg" class="hidden text-gray-500 italic text-sm">Tidak ada lampiran dokumentasi.</p>
+            </div>
 
-                <!-- Section 2: Progress & Aktivitas -->
-                <div class="p-4 border-b-2 border-black">
-                    <h3 class="font-bold mb-3 flex items-center">
-                        I. Uraian Pekerjaan / Progres Hari Ini <span class="text-red-500 ml-1 no-print">*</span>
-                    </h3>
-                    <textarea id="uraianPekerjaan" name="uraianPekerjaan" rows="6" placeholder="Jelaskan secara rinci pekerjaan yang dilakukan hari ini..." required
-                        class="w-full border border-gray-300 p-2 rounded-sm focus:outline-none focus:border-black print:border-none print:p-0"></textarea>
-                </div>
-
-                <!-- Section 3: Kendala -->
-                <div class="p-4 border-b-2 border-black">
-                    <h3 class="font-bold mb-3 flex items-center">
-                        II. Temuan / Kendala / Tindak Lanjut
-                    </h3>
-                    <textarea id="kendala" name="kendala" rows="4" placeholder="Catat kendala di lapangan dan rencana tindak lanjut..."
-                        class="w-full border border-gray-300 p-2 rounded-sm focus:outline-none focus:border-black print:border-none print:p-0"></textarea>
-                </div>
-
-                <!-- Section 4: Dokumentasi (Web Only) -->
-                <div class="p-4 border-b-2 border-black no-print">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-bold flex items-center">
-                            III. Lampiran Dokumentasi (Unggah Foto)
-                        </h3>
-                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Opsional, bisa tambah lebih dari 1</span>
-                    </div>
+            <!-- SECTION 4: TANDA TANGAN (Di luar tabel) -->
+            <div class="mt-8 pt-4 pb-12 flex justify-between px-8 sm:px-16 print:px-12 print:break-inside-avoid" style="page-break-inside: avoid;">
+                
+                <!-- Pengawas -->
+                <div class="flex flex-col items-center text-center w-48">
+                    <p class="text-sm">Dibuat oleh,</p>
+                    <p class="text-sm font-semibold mb-2">Pengawas Lapangan</p>
                     
-                    <div class="bg-gray-50 p-4 border border-dashed border-gray-400 rounded-sm">
-                        <!-- Area Upload -->
-                        <div class="flex items-center justify-center w-full mb-4">
-                            <label for="fotoInput" class="flex flex-col items-center justify-center w-full h-20 border-2 border-gray-300 border-dashed rounded cursor-pointer bg-white hover:bg-gray-100 transition">
-                                <div class="flex flex-col items-center justify-center pt-2 pb-2">
-                                    <p class="text-sm text-gray-600"><i class="fas fa-plus-circle text-blue-500 mr-2 text-lg"></i><span class="font-semibold">Klik untuk tambah foto</span></p>
-                                </div>
-                                <input id="fotoInput" type="file" class="hidden" accept="image/*" multiple onchange="handlePhotoUpload(event)" />
-                            </label>
-                        </div>
-                        
-                        <!-- Area Preview Foto (Web) -->
-                        <div id="photoPreviewContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 empty:hidden"></div>
-                    </div>
-                </div>
-                
-                <!-- Section 4: Dokumentasi (Print Only) -->
-                <div class="hidden print-only p-4 border-b-2 border-black">
-                    <h3 class="font-bold mb-3 flex items-center">
-                        III. Lampiran Dokumentasi
-                    </h3>
-                    <div id="printPhotoContainer" class="grid grid-cols-2 gap-4">
-                        <!-- Photos for print akan dimasukkan kesini oleh JS -->
+                    <!-- Ruang kosong fix untuk TTD Basah -->
+                    <div class="h-24 w-full flex items-center justify-center"></div>
+                    
+                    <div class="w-full">
+                        <p class="font-bold text-base underline text-black">Chandra Kurniawan, ST.</p>
+                        <p class="text-sm text-black">Pengawas</p>
                     </div>
                 </div>
 
-                <!-- Section 5: Tanda Tangan -->
-                <div class="p-6 bg-white print:break-inside-avoid">
-                    <div class="flex justify-between px-4 sm:px-12">
-                        
-                        <!-- Pengawas -->
-                        <div class="flex flex-col items-center justify-between text-center w-48" style="min-height: 160px;">
-                            <div>
-                                <p class="text-sm font-medium">Dibuat oleh,</p>
-                                <p class="text-sm font-semibold">Pengawas Lapangan</p>
-                            </div>
-                            
-                            <!-- Ruang kosong untuk TTD Manual -->
-                            <div class="h-24 flex items-center justify-center my-2 w-full"></div>
-                            
-                            <div>
-                                <p class="font-bold text-base underline text-black">Chandra Kurniawan, ST.</p>
-                                <p class="text-sm text-black">Pengawas</p>
-                            </div>
-                        </div>
-
-                        <!-- Direktur -->
-                        <div class="flex flex-col items-center justify-between text-center w-48" style="min-height: 160px;">
-                            <div>
-                                <p class="text-sm font-medium">Mengetahui/Menyetujui,</p>
-                                <p class="text-sm font-semibold">Direktur</p>
-                            </div>
-                            
-                            <!-- Ruang kosong untuk TTD Manual (Tinggi sama agar sejajar) -->
-                            <div class="h-24 flex items-center justify-center my-2 w-full"></div>
-                            
-                            <div>
-                                <p class="font-bold text-base underline text-black">Rohendi</p>
-                                <p class="text-sm text-black">Direktur</p>
-                            </div>
-                        </div>
-
+                <!-- Direktur -->
+                <div class="flex flex-col items-center text-center w-48">
+                    <p class="text-sm">Mengetahui/Menyetujui,</p>
+                    <p class="text-sm font-semibold mb-2">Direktur</p>
+                    
+                    <!-- Ruang kosong fix untuk TTD Basah sejajar -->
+                    <div class="h-24 w-full flex items-center justify-center"></div>
+                    
+                    <div class="w-full">
+                        <p class="font-bold text-base underline text-black">Rohendi</p>
+                        <p class="text-sm text-black">Direktur</p>
                     </div>
                 </div>
+
             </div>
         </form>
     </div>
 
-    <!-- Custom Modal -->
-    <div id="customModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
-        <div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-2xl transform transition-all">
+    <!-- Custom Modal for Alerts -->
+    <div id="customModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center no-print">
+        <div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-2xl">
             <div class="text-center">
-                <div id="modalIcon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4">
-                    <!-- Icon -->
-                </div>
-                <h3 id="modalTitle" class="text-lg leading-6 font-medium text-gray-900 mb-2">Pesan</h3>
-                <div class="mt-2">
-                    <p id="modalMessage" class="text-sm text-gray-500"></p>
-                </div>
+                <div id="modalIcon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4"></div>
+                <h3 id="modalTitle" class="text-lg font-medium text-gray-900 mb-2">Pesan</h3>
+                <p id="modalMessage" class="text-sm text-gray-500"></p>
             </div>
-            <div class="mt-5 sm:mt-6">
-                <button type="button" onclick="closeModal()" class="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm">
+            <div class="mt-5">
+                <button type="button" onclick="closeModal()" class="w-full rounded border shadow-sm px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 font-medium">
                     Tutup
                 </button>
             </div>
@@ -251,40 +289,101 @@
     </div>
 
     <script>
-        // Set default date & time
+        // Set Default Date & Time
         document.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
-            const dateStr = now.toISOString().split('T')[0];
-            document.getElementById('tanggal').value = dateStr;
-            const startHour = String(now.getHours()).padStart(2, '0');
-            document.getElementById('jamPengawasan').value = `${startHour}:00`;
+            document.getElementById('tanggal').value = now.toISOString().split('T')[0];
+            document.getElementById('jamPengawasan').value = String(now.getHours()).padStart(2, '0') + ':00';
+            setupAutoResize();
         });
 
-        // Modal Logic
-        function showModal(title, message, type = 'info') {
-            const modal = document.getElementById('customModal');
-            const modalIcon = document.getElementById('modalIcon');
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalMessage').innerText = message;
-            
-            if (type === 'error') {
-                modalIcon.innerHTML = '<i class="fas fa-exclamation-circle text-2xl text-red-600"></i>';
-                modalIcon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4";
-            } else if (type === 'warning') {
-                modalIcon.innerHTML = '<i class="fas fa-exclamation-triangle text-2xl text-yellow-600"></i>';
-                modalIcon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4";
-            } else {
-                modalIcon.innerHTML = '<i class="fas fa-info-circle text-2xl text-blue-600"></i>';
-                modalIcon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4";
-            }
-            modal.classList.remove('hidden');
+        // --- Logika Auto Resize Textarea ---
+        function setupAutoResize() {
+            const textareas = document.querySelectorAll('.auto-resize');
+            textareas.forEach(ta => {
+                ta.style.height = 'auto';
+                ta.style.height = (ta.scrollHeight) + 'px';
+                
+                ta.removeEventListener('input', resizeHandler); // Prevent duplicate listeners
+                ta.addEventListener('input', resizeHandler);
+            });
         }
 
-        function closeModal() {
-            document.getElementById('customModal').classList.add('hidden');
+        function resizeHandler() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
         }
 
-        // Photo Upload Logic
+        // --- Logika Tambah & Hapus Baris ---
+        function updateRowNumbers(tbodyId) {
+            const tbody = document.getElementById(tbodyId);
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                row.querySelector('.row-number').innerText = index + 1;
+                // Aktifkan tombol hapus hanya jika baris lebih dari 1
+                const deleteBtn = row.querySelector('button');
+                if (rows.length > 1) {
+                    deleteBtn.removeAttribute('disabled');
+                } else {
+                    deleteBtn.setAttribute('disabled', 'true');
+                }
+            });
+        }
+
+        function addUraianRow() {
+            const tbody = document.getElementById('uraianTbody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="border border-black p-2 text-center align-top row-number"></td>
+                <td class="border border-black p-0 align-top">
+                    <textarea class="table-input auto-resize" rows="2" placeholder="Tuliskan detail pekerjaan..." required></textarea>
+                </td>
+                <td class="border border-black p-2 text-center align-top">
+                    <select class="w-full bg-transparent outline-none cursor-pointer print:appearance-none text-center h-full pt-1">
+                        <option value="">- Pilih -</option>
+                        <option value="Progres">Progres</option>
+                        <option value="Selesai">Selesai</option>
+                    </select>
+                </td>
+                <td class="border border-black p-2 text-center align-middle relative">
+                    <input type="checkbox" class="w-5 h-5 cursor-pointer accent-black">
+                    <button type="button" onclick="removeRow(this, 'uraianTbody')" class="no-print absolute top-1/2 -right-8 transform -translate-y-1/2 text-red-500 hover:bg-red-100 rounded-full w-6 h-6 flex items-center justify-center transition" title="Hapus baris">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            updateRowNumbers('uraianTbody');
+            setupAutoResize();
+        }
+
+        function addTemuanRow() {
+            const tbody = document.getElementById('temuanTbody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="border border-black p-2 text-center align-top row-number"></td>
+                <td class="border border-black p-0 align-top">
+                    <textarea class="table-input auto-resize" rows="2" placeholder="Sebutkan kendala (jika ada)..."></textarea>
+                </td>
+                <td class="border border-black p-0 align-top relative">
+                    <textarea class="table-input auto-resize" rows="2" placeholder="Sebutkan solusi penanganan..."></textarea>
+                    <button type="button" onclick="removeRow(this, 'temuanTbody')" class="no-print absolute top-1/2 -right-8 transform -translate-y-1/2 text-red-500 hover:bg-red-100 rounded-full w-6 h-6 flex items-center justify-center transition" title="Hapus baris">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            updateRowNumbers('temuanTbody');
+            setupAutoResize();
+        }
+
+        function removeRow(btn, tbodyId) {
+            const tr = btn.closest('tr');
+            tr.remove();
+            updateRowNumbers(tbodyId);
+        }
+
+        // --- Photo Upload Logic ---
         let uploadedPhotos = [];
 
         function handlePhotoUpload(event) {
@@ -293,7 +392,7 @@
 
             Array.from(files).forEach(file => {
                 if (file.size > 5 * 1024 * 1024) {
-                    showModal('File Terlalu Besar', `File ${file.name} melebihi 5MB.`, 'error');
+                    showModal('File Terbesar', `File ${file.name} melebihi 5MB.`, 'error');
                     return;
                 }
                 const reader = new FileReader();
@@ -301,7 +400,6 @@
                     uploadedPhotos.push({
                         id: 'photo_' + Date.now() + Math.random().toString(36).substr(2, 9),
                         data: e.target.result,
-                        name: file.name,
                         caption: ''
                     });
                     renderPhotos();
@@ -309,36 +407,44 @@
                 reader.readAsDataURL(file);
             });
             event.target.value = '';
+            document.getElementById('emptyPhotoMsg').classList.add('hidden');
         }
 
         function renderPhotos() {
-            const container = document.getElementById('photoPreviewContainer');
+            const container = document.getElementById('photoContainer');
             container.innerHTML = '';
             
+            if (uploadedPhotos.length === 0) {
+                return;
+            }
+
             uploadedPhotos.forEach(photo => {
                 const div = document.createElement('div');
-                // Tampilan rapih web dengan input caption langsung di bawah foto
-                div.className = 'relative bg-white border border-gray-300 rounded p-2 shadow-sm flex flex-col';
+                div.className = 'border border-black p-2 flex flex-col relative page-break-inside-avoid mb-2';
+                div.style.pageBreakInside = 'avoid';
+                
                 div.innerHTML = `
-                    <button type="button" onclick="removePhoto('${photo.id}')" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition z-10" title="Hapus Foto">
+                    <button type="button" onclick="removePhoto('${photo.id}')" class="no-print absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow z-10 hover:bg-red-600">
                         <i class="fas fa-times text-xs"></i>
                     </button>
-                    <div class="h-32 w-full bg-gray-100 rounded mb-2 overflow-hidden flex items-center justify-center border border-gray-200">
-                        <img src="${photo.data}" alt="Preview" class="object-cover w-full h-full">
+                    <div class="w-full flex justify-center items-center overflow-hidden border-b border-black pb-2 mb-2" style="height: 180px;">
+                        <img src="${photo.data}" class="max-w-full max-h-full object-contain">
                     </div>
-                    <input type="text" placeholder="Keterangan foto ini..." value="${photo.caption}" 
-                        class="w-full text-sm p-2 border border-gray-300 rounded focus:border-black focus:outline-none" 
-                        oninput="updatePhotoCaption('${photo.id}', this.value)">
+                    <div class="w-full flex">
+                        <span class="font-bold text-xs uppercase mr-2 pt-1">Ket:</span>
+                        <!-- Textarea Keterangan Foto -->
+                        <textarea placeholder="Keterangan foto ini..." class="table-input auto-resize text-sm flex-1 print:p-0 print:border-none print:mt-[-4px]" oninput="updatePhotoCaption('${photo.id}', this)">${photo.caption}</textarea>
+                    </div>
                 `;
                 container.appendChild(div);
             });
+            setupAutoResize();
         }
 
-        // Update data array tanpa me-render ulang agar kursor tidak hilang saat mengetik
-        function updatePhotoCaption(id, caption) {
+        function updatePhotoCaption(id, textareaEl) {
             const photo = uploadedPhotos.find(p => p.id === id);
             if (photo) {
-                photo.caption = caption;
+                photo.caption = textareaEl.value;
             }
         }
 
@@ -347,66 +453,64 @@
             renderPhotos();
         }
 
-        // Print/Export Logic
+        // --- Print & Utilities ---
         function prepareForPrint() {
-            // Validasi kolom wajib
-            const requiredFields = ['tanggal', 'jamPengawasan', 'uraianPekerjaan'];
-            let isValid = true;
-            for (const fieldId of requiredFields) {
-                const el = document.getElementById(fieldId);
-                if (!el.value.trim()) {
-                    el.classList.add('bg-red-50');
-                    isValid = false;
-                } else {
-                    el.classList.remove('bg-red-50');
-                }
-            }
-
-            if (!isValid) {
-                showModal('Peringatan', 'Harap isi semua kolom wajib (yang bertanda bintang merah) sebelum mencetak.', 'warning');
+            // Cek textareas uraian pekerjaan utama
+            const uraianUtama = document.querySelector('#uraianTbody textarea');
+            if (uraianUtama && !uraianUtama.value.trim()) {
+                showModal('Peringatan', 'Harap isi Uraian Pekerjaan minimal baris pertama sebelum mencetak.', 'warning');
+                uraianUtama.focus();
                 return;
             }
 
-            // Siapkan Foto untuk tampilan Print
-            const printContainer = document.getElementById('printPhotoContainer');
-            printContainer.innerHTML = ''; 
-
-            if (uploadedPhotos.length > 0) {
-                uploadedPhotos.forEach(photo => {
-                    const div = document.createElement('div');
-                    // Format rapih PDF (Grid, Border hitam tegas)
-                    div.className = 'border border-black p-2 flex flex-col break-inside-avoid page-break-inside-avoid';
-                    div.innerHTML = `
-                        <div class="flex-1 w-full bg-gray-50 flex justify-center items-center overflow-hidden border-b border-black pb-2 mb-2" style="min-height: 150px;">
-                            <img src="${photo.data}" class="max-w-full max-h-48 object-contain">
-                        </div>
-                        <div class="px-1 pb-1">
-                            <span class="font-bold text-xs uppercase text-gray-700">Keterangan:</span>
-                            <p class="text-sm text-black mt-1 leading-tight">${photo.caption || '-'}</p>
-                        </div>
-                    `;
-                    printContainer.appendChild(div);
-                });
+            // Atur pesan foto kosong
+            if (uploadedPhotos.length === 0) {
+                document.getElementById('emptyPhotoMsg').classList.remove('hidden');
+                document.getElementById('emptyPhotoMsg').classList.add('print-only', 'block');
             } else {
-                printContainer.innerHTML = '<p class="text-gray-500 italic text-sm col-span-2">Tidak ada dokumentasi foto yang dilampirkan.</p>';
+                document.getElementById('emptyPhotoMsg').classList.add('hidden');
             }
 
-            // Print
+            // Eksekusi Print
             setTimeout(() => {
                 window.print();
             }, 300);
         }
 
+        function showModal(title, message, type = 'info') {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            const icon = document.getElementById('modalIcon');
+            
+            if (type === 'error') {
+                icon.innerHTML = '<i class="fas fa-times text-2xl text-red-600"></i>';
+                icon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4";
+            } else if (type === 'warning') {
+                icon.innerHTML = '<i class="fas fa-exclamation text-2xl text-yellow-600"></i>';
+                icon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4";
+            }
+            document.getElementById('customModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('customModal').classList.add('hidden');
+        }
+
         function resetForm() {
-            if(confirm("Apakah Anda yakin ingin mengosongkan formulir? Data akan terhapus.")) {
-                 document.getElementById('pengawasanForm').reset();
-                 uploadedPhotos = [];
-                 renderPhotos();
-                 
-                 const now = new Date();
-                 document.getElementById('tanggal').value = now.toISOString().split('T')[0];
-                 const startHour = String(now.getHours()).padStart(2, '0');
-                 document.getElementById('jamPengawasan').value = `${startHour}:00`;
+            if(confirm("Yakin ingin mengosongkan seluruh form?")) {
+                document.getElementById('pengawasanForm').reset();
+                
+                document.getElementById('uraianTbody').innerHTML = '';
+                document.getElementById('temuanTbody').innerHTML = '';
+                addUraianRow();
+                addTemuanRow();
+                
+                uploadedPhotos = [];
+                renderPhotos();
+                
+                const now = new Date();
+                document.getElementById('tanggal').value = now.toISOString().split('T')[0];
+                document.getElementById('jamPengawasan').value = String(now.getHours()).padStart(2, '0') + ':00';
             }
         }
     </script>
